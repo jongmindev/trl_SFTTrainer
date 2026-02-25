@@ -1,6 +1,6 @@
 #!/bin/bash
-#SBATCH --job-name=trl
-#SBATCH --nodes=4
+#SBATCH --job-name=trl_v2
+#SBATCH --nodes=3
 #SBATCH --ntasks-per-node=1
 #SBATCH --gres=gpu:6
 #SBATCH --cpus-per-task=32
@@ -53,7 +53,6 @@ export WANDB_DIR="$TMPDIR/wandb"
 export WANDB_CACHE_DIR="$TMPDIR/wandb_cache"
 export TORCHINDUCTOR_CACHE_DIR="$TMPDIR/torchinductor"
 export TRITON_CACHE_DIR="$TMPDIR/triton"
-HYDRA_ARGS="hydra.run.dir=$TMPDIR/hydra_outputs/${now:%Y-%m-%d}/${now:%H-%M-%S}"
 
 cleanup() {
     echo "Caught signal! Cleaning up temporary directory..."
@@ -65,10 +64,24 @@ cleanup() {
 # SIGINT(Ctrl+C), SIGTERM(scancel 기본 신호), EXIT(정상 종료) 시 cleanup 함수 실행
 trap cleanup SIGINT SIGTERM EXIT
 
-config_name="${1:-config.yaml}"
-echo "Using config: $config_name"
-echo "=============================================================="
-echo ""
+# config_name="${1:-config.yaml}"
+config_name="$1"
+shift                   # 첫 번째 인자($1)를 제거해서 $@에는 나머지 옵션만 남김
+if [ -z "$config_name" ]; then
+    echo "config_name is not specified."
+    exit 1
+fi
+
+if [ -f "$PROJ_DIR/src/configs/$config_name" ]; then
+    echo "Using config: $config_name"
+    echo "=============================================================="
+    echo ""
+else
+    echo "File not found: $config_name"
+    exit 1
+fi
+
+HYDRA_ARGS="hydra.run.dir=$TMPDIR/hydra_outputs/${now:%Y-%m-%d}/${now:%H-%M-%S} $@"
 
 srun --label uv run torchrun \
     --nnodes=$SLURM_NNODES \
@@ -78,5 +91,7 @@ srun --label uv run torchrun \
     --rdzv-endpoint=$MASTER_ADDR:$MASTER_PORT \
     --rdzv-id=$SLURM_JOB_ID \
     main.py \
-    --config-name $config_name \
-    $HYDRA_ARGS  # Hydra 경로 설정 인자
+    --config-name "$config_name" \
+    $HYDRA_ARGS
+    # "$HYDRA_ARGS" \     # Hydra 경로 설정 인자
+    # "${@}"              # 가변 인자 : hydra args
