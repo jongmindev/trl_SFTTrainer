@@ -1,0 +1,73 @@
+seed: 42
+data_seed: 42
+
+
+model:
+  model_alias: thunder-chat-1B
+  model: /shared/erc/lab08/jiheonseok/b200/qwen3-1.7b/iter_10600
+  tokenizer: /shared/erc/lab08/jiheonseok/b200/qwen3-1.7b/iter_10600
+  chat_template_path: /home/s1/jongmin/core/training/trl_SFTTrainer/src/chat_templates/qwen3_gen-tagged.jinja
+
+data:
+  datasets: 
+    - /home/s1/jongmin/1_chatbot_v2/chatdata/sft/koalpaca_realqa.jsonl
+    - /home/s1/jongmin/1_chatbot_v2/chatdata/sft/koalpaca.jsonl
+    - /home/s1/jongmin/1_chatbot_v2/chatdata/sft/magpie_split1.jsonl
+    - /home/s1/jongmin/1_chatbot_v2/chatdata/sft/magpie_split2.jsonl
+    - /home/s1/jongmin/1_chatbot_v2/chatdata/sft/trainset.json
+    - /home/s1/jongmin/1_chatbot_v2/chatdata/sft/koalpaca_koifeval/chosen.jsonl
+    - /home/s1/jongmin/1_chatbot_v2/chatdata/sft/slimorca_enifeval/chosen.jsonl
+    - /home/s1/jongmin/1_chatbot_v2/chatdata/sft/math_en/chosen.jsonl
+    - /home/s1/jongmin/1_chatbot_v2/chatdata/sft/math_ko/chosen.jsonl
+  datasets_alias: dataset_v0
+  data_seed: ${data_seed}
+  dataset_num_proc: 32
+  max_length: 4096
+  packing: true
+
+trainer:
+  assistant_only_loss: true
+  num_train_epochs: 3
+  # resume_from_checkpoint:       # 언제나 resume_from_checkpoint=True 로 동작함. 
+
+optimizer:
+  optim: "adamw_torch_fused"
+  # optim: "adamw_torch"
+  weight_decay: 0.1
+  adam_beta1: 0.9
+  adam_beta2: 0.95
+  adam_epsilon: 1e-5
+
+scheduler:
+  learning_rate: 5e-6
+  lr_scheduler_type: "cosine"
+  warmup_ratio: 0.01
+  # warmup_steps:
+
+deepspeed:
+  deepspeed_stage: 1
+  # dtype: bf16           # 무조건 bf16 적용됨
+
+  # global_batch: 288
+  global_batch: 72
+  micro_batch: 1
+  gradient_clipping: 1.0
+
+  gradient_checkpointing: true
+
+save:
+  output_rootdir: /home/s1/jongmin/1_chatbot_v2/outputs/sft/trl
+  output_dir: "${save.output_rootdir}/${model.model_alias}/${data.datasets_alias}/GBS${deepspeed.global_batch}/epochs${trainer.num_train_epochs}/lr${scheduler.learning_rate}/optim_v2/seed${seed}"
+  save_strategy: epoch    # default : steps | no, epoch
+  # save_steps: 200         # default : 500
+  save_total_limit: 3
+
+wandb:
+  # report_to: wandb
+  wandb_run_name: "${save.output_dir}"
+  wandb_project_name: chatbot
+  wandb_entity: jongmin-dev-seoul-national-university
+
+hydra:
+  run:
+    dir: "${save.output_dir}/hydra_logs/${now:%Y-%m-%d_%H-%M-%S}"
