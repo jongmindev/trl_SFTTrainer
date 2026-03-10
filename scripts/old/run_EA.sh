@@ -1,6 +1,6 @@
 #!/bin/bash
-#SBATCH --job-name=trl_v2
-#SBATCH --nodes=3
+#SBATCH --job-name=trl_v2_compare
+#SBATCH --nodes=2
 #SBATCH --ntasks-per-node=1
 #SBATCH --gres=gpu:6
 #SBATCH --cpus-per-task=32
