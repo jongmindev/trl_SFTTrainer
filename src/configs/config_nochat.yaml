@@ -10,16 +10,12 @@ model:
 
 data:
   datasets: 
-    - /home/s1/jongmin/1_chatbot_v2/chatdata/sft/koalpaca_realqa.jsonl
-    - /home/s1/jongmin/1_chatbot_v2/chatdata/sft/koalpaca.jsonl
-    - /home/s1/jongmin/1_chatbot_v2/chatdata/sft/magpie_split1.jsonl
-    - /home/s1/jongmin/1_chatbot_v2/chatdata/sft/magpie_split2.jsonl
     - /home/s1/jongmin/1_chatbot_v2/chatdata/sft/trainset.json
     - /home/s1/jongmin/1_chatbot_v2/chatdata/sft/koalpaca_koifeval/chosen.jsonl
     - /home/s1/jongmin/1_chatbot_v2/chatdata/sft/slimorca_enifeval/chosen.jsonl
     - /home/s1/jongmin/1_chatbot_v2/chatdata/sft/math_en/chosen.jsonl
     - /home/s1/jongmin/1_chatbot_v2/chatdata/sft/math_ko/chosen.jsonl
-  datasets_alias: dataset_v0
+  datasets_alias: nochat
   data_seed: ${data_seed}
   dataset_num_proc: 32
   max_length: 4096
@@ -39,7 +35,7 @@ optimizer:
   adam_epsilon: 1e-5
 
 scheduler:
-  learning_rate: 2e-5
+  learning_rate: 5e-5
   lr_scheduler_type: "cosine"
   warmup_ratio: 0.01
   # warmup_steps:
